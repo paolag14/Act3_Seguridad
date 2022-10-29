@@ -1,16 +1,60 @@
-import React, { useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useRef } from 'react';
+import { API_URL } from './config';
 
 
-function Login() {
+function Login({setToken, setUserData}) {
+    const location=useLocation();
+    const urlParams=new URLSearchParams(location.search);
+    const navigate = useNavigate();
     const email = useRef("")
     const password = useRef("")
     function submitLogin(e){
         e.preventdefault();
-        console.log(email.current.value)
-        console.log(password.current.value)
-        alert("Login exitoso")
+        let succesful=false
+        fetch(API_URL+"/token", {
+          method:"POST",
+          body: new URLSearchParams({
+            'username':email.current.value,
+            'password':password.current.value,
+          })
+          
+        }).then((data)=> {
+          if (data.status===200){
+            succesful=true
+            
+          }
+          else {
+            console.log("no se puede")
+          }
+          return data.json()
+          })
+        .then((data)=> {
+          if(succesful){
+            localStorage.setItem("token", data.access_token)
+            fetch(API_URL+"/users/me/",{
+              headers:{"Authorization":"Bearer"+data.access_token}
+            })
+            .then((data)=>{
+              return data.json()
+            })
+            .then((data)=>{
+              fetch("https://api.github.com/users/"+data.github_user)
+              .then((data)=>data.json())
+              .then((data)=> {
+                localStorage.setItem("userData", JSON.stringify(data))
+                setUserData(data)
+                setToken(localStorage.getItem("token"))
+                navigate(urlParams.get("next")||"/")
+              })
+            })
+
+          } else{
+            throw new Error(data.detail)
+          }
+          
+        })
+        .catch((data) => alert(data))
 
     }
     return (
@@ -21,11 +65,11 @@ function Login() {
 
     <div className="form-floating">
       <input ref = {email} type="email" className="form-control" id="floatingInput" placeholder="name@example.com"/>
-      <label for="floatingInput">Email address</label>
+      <label htmlFor="floatingInput">Email address</label>
     </div>
     <div className="form-floating">
       <input ref = {password} type="password" className="form-control" id="floatingPassword" placeholder="Password"/>
-      <label for="floatingPassword">Password</label>
+      <label htmlFor="floatingPassword">Password</label>
     </div>
 
     <div className="checkbox mb-3">

@@ -6,6 +6,12 @@ import models, schemas
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
+def delete_user(db: Session, user_id:int):
+    db_user=get_user(db, user_id)
+    db.delete(db_user)
+    db.commit()
+    return db_user
+
 
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
@@ -17,7 +23,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: schemas.UserCreate, hashed_password: str):
     
-    db_user = models.User(email=user.email, hashed_password=hashed_password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password, github_user=user.github_user)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

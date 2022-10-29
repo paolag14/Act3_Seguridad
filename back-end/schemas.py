@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
 from pydantic import BaseModel
 
@@ -26,11 +26,14 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    github_user: Optional[str]=""
 
 
 class User(UserBase):
     id: int
     is_active: bool
+    github_user: Optional[str]=""
+    github_user: Optional[str]=""
     items: List[Item] = []
 
     class Config:
